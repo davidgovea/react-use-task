@@ -26,3 +26,10 @@ const Demo = () => {
   )
 }
 ```
+
+## Plans
+
+* Non-immediate running of task (e.g. on button press)
+* `.drop`, `.restartable`, `.maxConcurrency` task modifiers (like `ember-concurrency`)
+* Exposing manual cancellation
+* Historical state - `last`, `lastSuccessful` (like `e-c`)
