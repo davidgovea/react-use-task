@@ -1,4 +1,3 @@
-
 declare namespace Posterus {
   export class Future {
     static from: (...args: any[]) => Future;

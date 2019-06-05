@@ -6,7 +6,7 @@ function useTask(taskFn: IterableIterator<any>): void {
     const future = fiber((taskFn as any)());
     return () => {
       future.deinit();
-    }
+    };
   });
 }
 
