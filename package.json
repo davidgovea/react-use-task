@@ -1,6 +1,6 @@
 {
   "name": "react-use-task",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "☎️ React hook for managing async tasks/coroutines (with cancellation)",
   "main": "build/main/index.js",
   "typings": "build/main/index.d.ts",
