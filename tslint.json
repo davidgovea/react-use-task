@@ -5,6 +5,7 @@
     // TODO: allow devDependencies only in **/*.spec.ts files:
     // waiting on https://github.com/palantir/tslint/pull/3708
     "no-implicit-dependencies": [true, "dev"],
+    "no-submodule-imports": [true, "posterus"],
 
     /* tslint-immutable rules */
     // Recommended built-in rules
@@ -24,10 +25,7 @@
     "no-this": true,
     "no-class": true,
     "no-mixed-interface": true,
-    "no-expression-statement": [
-      true,
-      { "ignore-prefix": ["console.", "process.exit"] }
-    ],
+    "no-expression-statement": false,
     "no-if-statement": true
     /* end tslint-immutable rules */
   }
