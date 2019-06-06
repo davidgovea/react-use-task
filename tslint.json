@@ -6,6 +6,7 @@
     // waiting on https://github.com/palantir/tslint/pull/3708
     "no-implicit-dependencies": [true, "dev"],
     "no-submodule-imports": [true, "posterus"],
+    "object-literal-sort-keys": false,
 
     /* tslint-immutable rules */
     // Recommended built-in rules
@@ -26,7 +27,7 @@
     "no-class": true,
     "no-mixed-interface": true,
     "no-expression-statement": false,
-    "no-if-statement": true
+    "no-if-statement": false
     /* end tslint-immutable rules */
   }
 }
