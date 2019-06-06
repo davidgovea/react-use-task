@@ -1,13 +1,3 @@
-import { fiber } from 'posterus/fiber';
-import { useEffect } from 'react';
+// created from 'create-ts-index'
 
-function useTask(taskFn: IterableIterator<any>): void {
-  useEffect(() => {
-    const future = fiber((taskFn as any)());
-    return () => {
-      future.deinit();
-    };
-  });
-}
-
-export default useTask;
+export * from './useTask';
