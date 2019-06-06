@@ -1,27 +1,31 @@
 import { fiber } from 'posterus/fiber';
-import { DependencyList, useEffect, useState } from 'react';
-
+import { DependencyList, useCallback, useEffect, useState } from 'react';
 
 interface TaskInstanceBase<T> {
   isSuccessful: boolean;
   isError: boolean;
   error?: Error;
   value?: T;
+  // future?: Posterus.Future<any>
 }
 interface TaskInstanceError<T> extends TaskInstanceBase<T> {
   isSuccessful: false;
   isError: true;
-  error: Error
+  error: Error;
   value: T;
 }
 interface TaskInstanceSuccess<T> extends TaskInstanceBase<T> {
   isSuccessful: true;
   isError: false;
-  error: undefined
+  error: undefined;
   value: undefined;
 }
-type TaskInstance<T> = (TaskInstanceBase<T> | TaskInstanceError<T> | TaskInstanceSuccess<T>) & {
+type TaskInstance<T> = (
+  | TaskInstanceBase<T>
+  | TaskInstanceError<T>
+  | TaskInstanceSuccess<T>) & {
   toPromise: () => Promise<T>;
+  cancel: () => void;
 };
 
 interface TaskState<T> {
@@ -32,34 +36,95 @@ interface TaskState<T> {
   lastSuccessful?: TaskInstance<T>;
 }
 
-interface Task<T> extends TaskState<T> {
-  perform: () => Promise<T>;
-  cancelAll: () => void;
-}
-
-type TaskValues<T, A extends any[]> = [TaskState<T>, (...args: A) => TaskInstance<T>, () => void];
+type TaskValues<T, A extends any[]> = [
+  TaskState<T>,
+  (...args: A) => TaskInstance<T>,
+  () => void
+];
 
 export function useTask<Result = any, Args extends any[] = any[]>(
   taskFn: IterableIterator<any>,
   deps: DependencyList = []
 ): TaskValues<Result, Args> {
-  const [state, setState] = useState<TaskState<Result>>({
-    isIdle: true,
-    isRunning: false,
-    performCount: 0,
-  });
+  const [isRunning, setIsRunning] = useState(false);
+  const isIdle = !isRunning;
+  const [performCount, setPerformCount] = useState(0);
+  const [last, setLast] = useState<TaskInstance<Result>>();
+  const [lastSuccessful, setLastSuccessful] = useState<TaskInstance<Result>>();
 
-  useEffect(() => {
-    const future = fiber((taskFn as any)());
-    return () => {
-      future.deinit();
-    };
-  }, deps);
+  const [currentFuture, setCurrent] = useState<Posterus.Future>();
+
+  const cancelAll = useCallback((/*...args: Args*/) => {
+    // tslint:disable-next-line:no-unused-expression
+    currentFuture && currentFuture.deinit();
+  }, [currentFuture]);
+
+  useEffect(() => () => cancelAll, [currentFuture]);
+
+  const perform = useCallback(
+    (...args: Args): TaskInstance<Result> => {
+      setPerformCount(performCount + 1);
+      if (currentFuture) {
+        // Using 'drop' strategy here
+        return {
+          isError: false,
+          isSuccessful: false,
+          value: undefined,
+          toPromise: () => Promise.resolve(undefined),
+          cancel: () => undefined
+        };
+      } else {
+        const future = fiber((taskFn as any)(...args));
+        const promise = future.weak().toPromise();
+
+        const taskInstance = {
+          isError: false,
+          isSuccessful: false,
+          toPromise: () => promise,
+          cancel: () => future.deinit()
+        };
+        setCurrent(future);
+        setIsRunning(true);
+        setLast(taskInstance);
+        future
+          .weak()
+          .mapResult((result: Result) => {
+            const updatedLastTask: TaskInstance<Result> = {
+              ...last,
+              isSuccessful: true,
+              value: result
+            };
+            setLast(updatedLastTask);
+            setLastSuccessful(updatedLastTask);
+          })
+          .mapError((error: Error) => {
+            setLast({
+              ...last,
+              isError: true,
+              error
+            });
+          })
+          .finally(() => {
+            setIsRunning(false);
+            setCurrent(undefined);
+          });
+
+        return taskInstance;
+      }
+    },
+    [...deps, currentFuture, isRunning, last, lastSuccessful, performCount]
+  );
 
   return [
-    state,
-    (...args: Args) => ({} as any),
-    () => undefined,
+    {
+      isRunning,
+      isIdle,
+      last,
+      lastSuccessful,
+      performCount
+    },
+    perform,
+    cancelAll
   ];
 }
 
