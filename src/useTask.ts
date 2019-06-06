@@ -43,7 +43,7 @@ type TaskValues<T, A extends any[]> = [
 ];
 
 export function useTask<Result = any, Args extends any[] = any[]>(
-  taskFn: IterableIterator<any>,
+  taskFn: (...args: Args) => IterableIterator<Result>,
   deps: DependencyList = []
 ): TaskValues<Result, Args> {
   const [isRunning, setIsRunning] = useState(false);
@@ -74,7 +74,7 @@ export function useTask<Result = any, Args extends any[] = any[]>(
           cancel: () => undefined
         };
       } else {
-        const future = fiber((taskFn as any)(...args));
+        const future = fiber<Result>(taskFn(...args));
         const promise = future.weak().toPromise();
 
         const taskInstance = {
