@@ -1,3 +1,4 @@
+import { Future } from 'posterus';
 import { fiber } from 'posterus/fiber';
 import { DependencyList, useCallback, useEffect, useState } from 'react';
 
@@ -52,7 +53,7 @@ export function useTask<Result = any, Args extends any[] = any[]>(
   const [last, setLast] = useState<TaskInstance<Result>>();
   const [lastSuccessful, setLastSuccessful] = useState<TaskInstance<Result>>();
 
-  const [currentFuture, setCurrent] = useState<Posterus.Future>();
+  const [currentFuture, setCurrent] = useState<Future>();
 
   const cancelAll = useCallback((/*...args: Args*/) => {
     // tslint:disable-next-line:no-unused-expression

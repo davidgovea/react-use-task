@@ -27,6 +27,7 @@ declare namespace Posterus {
 }
 
 declare module 'posterus' {
+  export type Future = Posterus.Future;
   export const Future: Posterus.FutureConstructor;
   export const isFuture: (value: any) => boolean;
   export const isDeinitError: (error: any) => boolean;
