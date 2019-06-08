@@ -11,8 +11,7 @@ export function useWorker(
   const [state, perform, cancelAll] = useTask(workerFn, deps);
   useEffect(() => {
     perform();
-    // return () => cancelAll();
-  }, [...deps, cancelAll]);
+  }, []);
   return [state, cancelAll];
 }
 
