@@ -60,7 +60,7 @@ export function useTask<Result = any, Args extends any[] = any[]>(
     currentFuture && currentFuture.deinit();
   }, [currentFuture]);
 
-  useEffect(() => () => cancelAll, [currentFuture]);
+  useEffect(() => () => cancelAll(), [currentFuture]);
 
   const perform = useCallback(
     (...args: Args): TaskInstance<Result> => {
