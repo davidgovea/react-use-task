@@ -29,7 +29,7 @@ type TaskInstance<T> = (
   cancel: () => void;
 };
 
-interface TaskState<T> {
+export interface TaskState<T> {
   isRunning: boolean;
   isIdle: boolean;
   performCount: number;
