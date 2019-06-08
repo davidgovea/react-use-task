@@ -43,12 +43,17 @@ type TaskValues<T, A extends any[]> = [
   () => void
 ];
 
+interface TaskOptions {
+  mode?: 'drop' | 'restartable' | 'takeLatest' | 'enqueue';
+  maxConcurrency?: number;
+}
+
 export function useTask<Result = any, Args extends any[] = any[]>(
   taskFn: (...args: Args) => IterableIterator<Result>,
-  deps: DependencyList = []
+  deps: DependencyList = [],
+  options: TaskOptions = {}
 ): TaskValues<Result, Args> {
   const [isRunning, setIsRunning] = useState(false);
-  const isIdle = !isRunning;
   const [performCount, setPerformCount] = useState(0);
   const [last, setLast] = useState<TaskInstance<Result>>();
   const [lastSuccessful, setLastSuccessful] = useState<TaskInstance<Result>>();
@@ -119,7 +124,7 @@ export function useTask<Result = any, Args extends any[] = any[]>(
   return [
     {
       isRunning,
-      isIdle,
+      isIdle: !isRunning,
       last,
       lastSuccessful,
       performCount
