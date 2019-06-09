@@ -7,6 +7,9 @@ import {
   useRef,
   useState
 } from 'react';
+import useCounter from 'react-use/esm/useCounter';
+
+import { fLimit } from './lib/f-limit';
 
 interface TaskInstanceBase<T> {
   isSuccessful: boolean;
@@ -78,11 +81,11 @@ export function useTask<Result = any, Args extends any[] = any[]>(
   options: TaskOptions = {}
 ): TaskValues<Result, Args> {
   const [isRunning, setIsRunning] = useState(false);
-  const [performCount, setPerformCount] = useState(0);
+  const [performCount, { inc: incPerformCount }] = useCounter(0);
   const [lastState, setLastState] = useState<TaskInstance<Result>>();
   const [lastSuccessful, setLastSuccessful] = useState<TaskInstance<Result>>();
 
-  const [currentFuture, setCurrent] = useState<Future>();
+  const queue = useRef(fLimit(options.maxConcurrency || 1));
 
   const last = useRef<TaskInstance<Result>>();
   const setLast = useCallback(
@@ -95,72 +98,66 @@ export function useTask<Result = any, Args extends any[] = any[]>(
 
   const cancelAll = useCallback((/*...args: Args*/) => {
     // tslint:disable-next-line no-unused-expression
-    currentFuture && currentFuture.deinit();
-  }, [currentFuture]);
+    queue.current.cancelAll();
+  }, []);
 
-  useEffect(() => () => cancelAll(), [currentFuture]);
+  useEffect(() => cancelAll, []);
 
-  const runTask = useCallback(
-    (...args: Args): Future<Result | undefined> => {
-      setPerformCount(performCount + 1);
-      // tslint:disable-next-line no-let
-      let taskInstance: TaskInstance<Result>;
-      // const future = fiber<Result>(taskFn(...args));
-      const future = fiber<Result>(taskFn(...args)).map<Result>(
-        (error, value) => {
-          if (error) {
-            const isDeinit = isDeinitError(error);
-            if (last.current === taskInstance) {
-              const errorTask = {
-                ...taskInstance,
-                isError: !isDeinitError(error),
-                error
-              };
-              setLast(errorTask);
-            }
-            return isDeinit
-              ? Future.fromResult(undefined)
-              : Future.fromError(error);
-          } else {
-            const updatedTask = {
+  const runTask = useCallback((...args: Args): Future<Result | undefined> => {
+    // tslint:disable-next-line no-let
+    let taskInstance: TaskInstance<Result>;
+    // const future = fiber<Result>(taskFn(...args));
+    const future = fiber<Result>(taskFn(...args)).map<Result>(
+      (error, value) => {
+        if (error) {
+          const isDeinit = isDeinitError(error);
+          if (last.current === taskInstance) {
+            const errorTask = {
               ...taskInstance,
-              value,
-              isSuccessful: true
+              isError: !isDeinitError(error),
+              error
             };
-            if (last.current === taskInstance) {
-              setLast(updatedTask);
-            }
-            setLastSuccessful(updatedTask);
-            return value;
+            setLast(errorTask);
           }
+          return isDeinit
+            ? Future.fromResult(undefined)
+            : Future.fromError(error);
+        } else {
+          const updatedTask = {
+            ...taskInstance,
+            value,
+            isSuccessful: true
+          };
+          if (last.current === taskInstance) {
+            setLast(updatedTask);
+          }
+          setLastSuccessful(updatedTask);
+          return value;
         }
-      );
-
-      taskInstance = createTaskInstance(future);
-      setLast(taskInstance);
-      return future;
-    },
-    deps
-  );
-
-  const perform = useCallback(
-    (...args: Args) => {
-      if (currentFuture) {
-        const instance = { ...initialTaskInstance };
-        setLast(instance);
-        return instance;
-      } else {
-        setIsRunning(true);
-        const future = runTask(...args).finally(() => {
-          setIsRunning(false);
-          setCurrent(undefined);
-        });
-        setCurrent(future);
-        return createTaskInstance(future);
       }
-    },
-    [...deps, currentFuture]
-  );
+    );
+
+    taskInstance = createTaskInstance(future);
+    setLast(taskInstance);
+    return future;
+  }, deps);
+
+  const perform = useCallback((...args: Args) => {
+    incPerformCount();
+    if (queue.current.activeCount !== 0) {
+      const instance = { ...initialTaskInstance };
+      setLast(instance);
+      return instance;
+    } else {
+      setIsRunning(true);
+      const future = queue
+        .current(() => runTask(...args))
+        .finally(() => {
+          setIsRunning(queue.current.activeCount !== 0);
+        });
+      return createTaskInstance(future);
+    }
+  }, deps);
 
   return [
     {

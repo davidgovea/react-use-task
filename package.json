@@ -53,7 +53,8 @@
     "node": ">=8.9"
   },
   "dependencies": {
-    "posterus": "^0.4.7"
+    "posterus": "^0.4.7",
+    "react-use": "^9.4.0"
   },
   "peerDependencies": {
     "react": "^16.8.0"

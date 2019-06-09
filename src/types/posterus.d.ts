@@ -6,7 +6,7 @@ declare namespace Posterus {
     finally: <U>(mapper: (error?: any, result?: any) => any) => Future<U>;
     deinit: () => void;
     weak: () => Future<T>;
-    settle: (error: any, result: any) => void;
+    settle: (error?: any, result?: any) => void;
     toPromise: () => Promise<T>;
     then: Promise<T>['then'];
     catch: Promise<T>['catch'];
