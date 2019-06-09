@@ -53,8 +53,7 @@
     "node": ">=8.9"
   },
   "dependencies": {
-    "posterus": "^0.4.7",
-    "react-use": "^9.4.0"
+    "posterus": "^0.4.7"
   },
   "peerDependencies": {
     "react": "^16.8.0"
@@ -77,7 +76,7 @@
     "tslint-config-prettier": "^1.17.0",
     "tslint-immutable": "^5.0.0",
     "typedoc": "^0.13.0",
-    "typescript": "^3.1.6"
+    "typescript": "^3.5.1"
   },
   "ava": {
     "failFast": true,

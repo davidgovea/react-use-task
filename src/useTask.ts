@@ -84,8 +84,10 @@ export function useTask<Result = any, Args extends any[] = any[]>(
   const maxConcurrency = options.maxConcurrency || (options.mode ? 1 : 0);
 
   const [isRunning, setIsRunning] = useState(false);
-  const [performCount, { inc: incPerformCount }] = useCounter(0);
   const [lastState, setLastState] = useState<TaskInstance<Result>>();
+  const performCountRef = useRef(0);
+  const [performCount, setPerformCount] = useState(0);
+  const incPerformCount = () => setPerformCount(performCountRef.current + 1);
   const [lastSuccessful, setLastSuccessful] = useState<TaskInstance<Result>>();
 
   const queue = useRef(fLimit(maxConcurrency));
