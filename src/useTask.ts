@@ -7,73 +7,8 @@ import {
   useRef,
   useState
 } from 'react';
-import useCounter from 'react-use/esm/useCounter';
 
 import { fLimit } from './lib/f-limit';
-
-interface TaskInstanceBase<T> {
-  isSuccessful: boolean;
-  isError: boolean;
-  error?: Error;
-  value?: T;
-  // future?: Posterus.Future<any>
-}
-interface TaskInstanceError<T> extends TaskInstanceBase<T> {
-  isSuccessful: false;
-  isError: true;
-  error: Error;
-  value: T;
-}
-interface TaskInstanceSuccess<T> extends TaskInstanceBase<T> {
-  isSuccessful: true;
-  isError: false;
-  error: undefined;
-  value: undefined;
-}
-type TaskInstance<T> = (
-  | TaskInstanceBase<T>
-  | TaskInstanceError<T>
-  | TaskInstanceSuccess<T>) & {
-  toPromise: () => Promise<T>;
-  cancel: () => void;
-  deref: () => T | undefined;
-};
-
-export interface TaskState<T> {
-  isRunning: boolean;
-  isIdle: boolean;
-  performCount: number;
-  last?: TaskInstance<T>;
-  lastSuccessful?: TaskInstance<T>;
-}
-
-type TaskValues<T, A extends any[]> = [
-  TaskState<T>,
-  (...args: A) => TaskInstance<T>,
-  () => void
-];
-
-interface TaskOptions {
-  mode?: 'drop' | 'restartable' | 'enqueue';
-  maxConcurrency?: number;
-}
-
-const initialTaskInstance: TaskInstance<any> = {
-  isSuccessful: false,
-  isError: false,
-  deref: () => undefined,
-  toPromise: () => Promise.resolve(undefined),
-  cancel: () => undefined
-};
-
-function createTaskInstance<T>(future: Future<T>): TaskInstance<T> {
-  return {
-    ...initialTaskInstance,
-    deref: () => future.deref(),
-    toPromise: () => future.weak().toPromise(),
-    cancel: () => future.deinit()
-  };
-}
 
 export function useTask<Result = any, Args extends any[] = any[]>(
   taskFn: (...args: Args) => IterableIterator<Result>,
@@ -84,7 +19,6 @@ export function useTask<Result = any, Args extends any[] = any[]>(
   const maxConcurrency = options.maxConcurrency || (options.mode ? 1 : 0);
 
   const [isRunning, setIsRunning] = useState(false);
-  const [lastState, setLastState] = useState<TaskInstance<Result>>();
   const performCountRef = useRef(0);
   const [performCount, setPerformCount] = useState(0);
   const incPerformCount = () => setPerformCount(performCountRef.current + 1);
@@ -93,6 +27,7 @@ export function useTask<Result = any, Args extends any[] = any[]>(
   const queue = useRef(fLimit(maxConcurrency));
 
   const last = useRef<TaskInstance<Result>>();
+  const [lastState, setLastState] = useState<TaskInstance<Result>>();
   const setLast = useCallback(
     (l: TaskInstance<Result>) => {
       last.current = l;
@@ -137,7 +72,7 @@ export function useTask<Result = any, Args extends any[] = any[]>(
             setLast(updatedTask);
           }
           setLastSuccessful(updatedTask);
-          return value;
+          return Future.fromResult(value);
         }
       }
     );
@@ -190,3 +125,53 @@ export function useTask<Result = any, Args extends any[] = any[]>(
 }
 
 export default useTask;
+
+const initialTaskInstance: TaskInstance<any> = {
+  isSuccessful: false,
+  isError: false,
+  deref: () => undefined,
+  toPromise: () => Promise.resolve(undefined),
+  cancel: () => undefined
+};
+
+function createTaskInstance<T>(future: Future<T>): TaskInstance<T> {
+  return {
+    ...initialTaskInstance,
+    deref: () => future.deref(),
+    toPromise: () => future.weak().toPromise(),
+    cancel: () => future.deinit()
+  };
+}
+
+interface TaskInstanceData<T> {
+  isSuccessful: boolean;
+  isError: boolean;
+  error?: Error;
+  value?: T;
+  // future?: Posterus.Future<any>
+}
+
+type TaskInstance<T> = TaskInstanceData<T> & {
+  toPromise: () => Promise<T>;
+  cancel: () => void;
+  deref: () => T | undefined;
+};
+
+export interface TaskState<T> {
+  isRunning: boolean;
+  isIdle: boolean;
+  performCount: number;
+  last?: TaskInstance<T>;
+  lastSuccessful?: TaskInstance<T>;
+}
+
+type TaskValues<T, A extends any[]> = [
+  TaskState<T>,
+  (...args: A) => TaskInstance<T>, // perform()
+  () => void // cancelAll()
+];
+
+interface TaskOptions {
+  mode?: 'drop' | 'restartable' | 'enqueue';
+  maxConcurrency?: number;
+}
