@@ -1,9 +1,9 @@
 declare namespace Posterus {
   export class Future<T = any> {
-    map: <U>(mapper: (error: any, result?: T) => any) => Future<U>;
+    map: <U>(mapper: (error?: any, result?: T) => any) => Future<U>;
     mapResult: <U>(mapper: (result: T) => any) => Future<U>;
     mapError: <U>(mapper: (error: any) => any) => Future<U>;
-    finally: <U>(mapper: (error: any, result: any) => any) => Future<U>;
+    finally: <U>(mapper: (error?: any, result?: any) => any) => Future<U>;
     deinit: () => void;
     weak: () => Future<T>;
     settle: (error: any, result: any) => void;
