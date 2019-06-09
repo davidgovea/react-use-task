@@ -8,11 +8,50 @@ True cancellation requires generator functions. This library was inspired by [em
 
 ## Usage
 
+### Tasks
+
 ```jsx
-import useTask from 'react-use-task'
+import { useTask } from 'react-use-task'
 
 const Demo = () => {
-  useTask(function* () {
+  const [
+    { isRunning, performCount, last, lastSuccessful },
+    perform,
+    cancelAll
+  ] = useTask(function* () {
+    yield new Promise(r => setTimeout(r, 1000));
+    return +new Date;
+  });
+
+  return (
+    <div>
+      <button onClick={perform}>
+        Perform Task
+      </button>
+      <button onClick={cancelAll}>
+        Cancel All
+      </button>
+      <div>
+        isRunning: {'' + isRunning}, Perform count: {performCount}
+      </div>
+      <div>
+        last: {JSON.stringify(last)}
+      </div>
+      <div>
+        last success value: {lastSuccessful ? lastSuccessful.value : '<none>'}
+      </div>
+    </div>
+  )
+}
+```
+
+### Workers (background tasks)
+
+```jsx
+import { useWorker } from 'react-use-task'
+
+const Demo = () => {
+  useWorker(function* () {
     while (true) {
       console.log('tick');
       yield new Promise(r => setTimeout(r, 1000));
@@ -21,7 +60,7 @@ const Demo = () => {
 
   return (
     <div>
-      <div>Task will be automatically cancelled when component is unmounted</div>
+      <div>Worker task will be automatically cancelled when component is unmounted</div>
     </div>
   )
 }
