@@ -158,11 +158,7 @@ export function useTask<Result = any, Args extends any[] = any[]>(
     }
     if (mode === 'restartable' && isSaturated) {
       console.log('cancelling oldest running task');
-      try {
-        queue.current.activeList[0].deinit();
-      } catch (e) {
-        debugger;
-      }
+      queue.current.activeList[0].deinit();
     }
     const future = queue
       .current(() => runTask(...args))
