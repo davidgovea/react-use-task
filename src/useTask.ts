@@ -97,6 +97,13 @@ export function useTask<Result = any, Args extends any[] = any[]>(
       console.log('cancelling oldest running task');
       queue.current.activeList[0].deinit();
     }
+    if (mode === 'keepLatest' && isSaturated) {
+      if (queue.current.pendingCount > 0) {
+        console.log('dropped pending task', queue.current.queue);
+        last.current.cancel();
+        queue.current.empty();
+      }
+    }
     const future = queue
       .current(() => runTask(...args))
       .mapError(error => {
@@ -172,6 +179,6 @@ type TaskValues<T, A extends any[]> = [
 ];
 
 interface TaskOptions {
-  mode?: 'drop' | 'restartable' | 'enqueue';
+  mode?: 'drop' | 'restartable' | 'enqueue' | 'keepLatest';
   maxConcurrency?: number;
 }
