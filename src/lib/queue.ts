@@ -18,12 +18,14 @@ const fTry = (fn, ...args: any[]) => {
 type AnyFn<T = any> = (...args: any[]) => T;
 
 // tslint:disable-next-line typedef
-export function fLimit(
+export function futureQueue(
   concurrency: number
 ): AnyFn<Future> & {
   activeCount: number;
   pendingCount: number;
   activeList: Future[];
+  queue: Array<() => Future>;
+  empty: () => void;
   cancelAll: () => void;
 } {
   const queue = [];
@@ -57,6 +59,7 @@ export function fLimit(
     if (activeCount < concurrency || concurrency <= 0) {
       run(fn, settle, ...args);
     } else {
+      console.log('add to queue');
       queue.push(run.bind(null, fn, settle, ...args));
     }
   };
@@ -77,18 +80,28 @@ export function fLimit(
     },
     cancelAll: {
       value: () => {
+        queue.splice(0, queue.length)
         for (const active of activeList) {
           active.deinit();
         }
-        queue.splice(0, queue.length);
+      }
+    },
+    empty: {
+      value: () => queue.splice(0, queue.length)
+    },
+    queue: {
+      get: () => {
+        return [...queue];
       }
     },
     activeList: {
       get: () => {
-        return activeList;
+        return [...activeList];
       }
     }
   });
 
   return generator as any;
 }
+
+export default futureQueue;

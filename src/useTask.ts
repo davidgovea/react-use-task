@@ -8,7 +8,7 @@ import {
   useState
 } from 'react';
 
-import { fLimit } from './lib/f-limit';
+import futureQueue from './lib/queue';
 
 export function useTask<Result = any, Args extends any[] = any[]>(
   taskFn: (...args: Args) => IterableIterator<Result>,
@@ -24,7 +24,7 @@ export function useTask<Result = any, Args extends any[] = any[]>(
   const incPerformCount = () => setPerformCount(performCountRef.current + 1);
   const [lastSuccessful, setLastSuccessful] = useState<TaskInstance<Result>>();
 
-  const queue = useRef(fLimit(maxConcurrency));
+  const queue = useRef(futureQueue(maxConcurrency));
 
   const last = useRef<TaskInstance<Result>>();
   const [lastState, setLastState] = useState<TaskInstance<Result>>();
