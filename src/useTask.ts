@@ -27,6 +27,7 @@ type TaskInstance<T> = (
   | TaskInstanceSuccess<T>) & {
   toPromise: () => Promise<T>;
   cancel: () => void;
+  deref: () => T | undefined;
 };
 
 export interface TaskState<T> {
