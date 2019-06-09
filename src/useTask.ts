@@ -81,7 +81,7 @@ export function useTask<Result = any, Args extends any[] = any[]>(
   options: TaskOptions = {}
 ): TaskValues<Result, Args> {
   const mode = options.mode || 'enqueue';
-  const maxConcurrency = options.maxConcurrency || options.mode ? 1 : 0;
+  const maxConcurrency = options.maxConcurrency || (options.mode ? 1 : 0);
 
   const [isRunning, setIsRunning] = useState(false);
   const [performCount, { inc: incPerformCount }] = useCounter(0);
