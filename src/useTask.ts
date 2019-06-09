@@ -54,7 +54,7 @@ type TaskValues<T, A extends any[]> = [
 ];
 
 interface TaskOptions {
-  mode?: 'drop' | 'restartable' | 'takeLatest' | 'enqueue';
+  mode?: 'drop' | 'restartable' | 'enqueue';
   maxConcurrency?: number;
 }
 
@@ -80,12 +80,15 @@ export function useTask<Result = any, Args extends any[] = any[]>(
   deps: DependencyList = [],
   options: TaskOptions = {}
 ): TaskValues<Result, Args> {
+  const mode = options.mode || 'enqueue';
+  const maxConcurrency = options.maxConcurrency || options.mode ? 1 : 0;
+
   const [isRunning, setIsRunning] = useState(false);
   const [performCount, { inc: incPerformCount }] = useCounter(0);
   const [lastState, setLastState] = useState<TaskInstance<Result>>();
   const [lastSuccessful, setLastSuccessful] = useState<TaskInstance<Result>>();
 
-  const queue = useRef(fLimit(options.maxConcurrency || 1));
+  const queue = useRef(fLimit(maxConcurrency));
 
   const last = useRef<TaskInstance<Result>>();
   const setLast = useCallback(
@@ -144,19 +147,35 @@ export function useTask<Result = any, Args extends any[] = any[]>(
 
   const perform = useCallback((...args: Args) => {
     incPerformCount();
-    if (queue.current.activeCount !== 0) {
+    setIsRunning(true);
+
+    const isSaturated = queue.current.activeCount >= maxConcurrency;
+    if (mode === 'drop' && isSaturated) {
       const instance = { ...initialTaskInstance };
       setLast(instance);
+      console.log('dropped');
       return instance;
-    } else {
-      setIsRunning(true);
-      const future = queue
-        .current(() => runTask(...args))
-        .finally(() => {
-          setIsRunning(queue.current.activeCount !== 0);
-        });
-      return createTaskInstance(future);
     }
+    if (mode === 'restartable' && isSaturated) {
+      console.log('cancelling oldest running task');
+      try {
+        queue.current.activeList[0].deinit();
+      } catch (e) {
+        debugger;
+      }
+    }
+    const future = queue
+      .current(() => runTask(...args))
+      .mapError(error => {
+        const isDeinit = isDeinitError(error);
+        return isDeinit
+          ? Future.fromResult(undefined)
+          : Future.fromError(error);
+      })
+      .finally(() => {
+        setIsRunning(queue.current.activeCount !== 0);
+      });
+    return createTaskInstance(future);
   }, deps);
 
   return [
