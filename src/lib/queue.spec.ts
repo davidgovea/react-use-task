@@ -132,14 +132,14 @@ test('oldestRunning property', async t => {
   const limit = futureQueue(1);
   t.is(limit.oldestRunning, undefined);
 
-  const runningFuture1 = limit(() => delay(1000));
+  limit(() => delay(1000));
   t.true(isFuture(limit.oldestRunning));
 });
 
 test('empty method', async t => {
   const limit = futureQueue(3);
 
-  const futures = Array.from({ length: 5 }, () => limit(() => delay(1000)));
+  Array.from({ length: 5 }, () => limit(() => delay(1000)));
   t.is(limit.activeCount, 3);
   t.is(limit.pendingCount, 2);
 
@@ -164,5 +164,6 @@ test('cancellAll method', async t => {
     })
     .toPromise();
 
+  t.is(limit.activeCount, 0);
   t.true(inRange(end(), { start: 0, end: 50 }), 'Tasks were cancelled');
 });

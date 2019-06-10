@@ -22,6 +22,7 @@ export function useTask<Result = any, Args extends any[] = any[]>(
   const performCountRef = useRef(0);
   const [performCount, setPerformCount] = useState(0);
   const incPerformCount = () => {
+    // tslint:disable-next-line no-object-mutation
     performCountRef.current += 1;
     setPerformCount(performCountRef.current);
   };
@@ -33,6 +34,7 @@ export function useTask<Result = any, Args extends any[] = any[]>(
   const [lastState, setLastState] = useState<TaskInstance<Result>>();
   const setLast = useCallback(
     (l: TaskInstance<Result>) => {
+      // tslint:disable-next-line no-object-mutation
       last.current = l;
       setLastState(l);
     },
@@ -130,9 +132,9 @@ const initialTaskInstance: TaskInstance<any> = {
   deref: () => undefined,
   toPromise: () => Promise.resolve(undefined),
   cancel: () => undefined,
-  mapError: (cb: any) => undefined,
+  mapError: () => undefined,
   mapResult: (cb: any) => cb(),
-  catch: (cb: any) => undefined,
+  catch: () => undefined,
   then: (cb: any) => cb()
 };
 

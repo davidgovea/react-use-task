@@ -14,7 +14,7 @@ test('basic task state', async t => {
     }, [])
   );
 
-  const [initialState, perform, cancelAll] = result.current;
+  const [initialState, perform] = result.current;
   t.is(initialState.isRunning, false, 'it starts in a non-running state');
   t.is(initialState.isIdle, true, 'it starts in an idle state');
   t.is(initialState.performCount, 0, 'it starts with zero perform count');
@@ -88,7 +88,7 @@ test('task throws uncaught error', async t => {
     }, [])
   );
 
-  const [, perform, cancelAll] = result.current;
+  const [, perform] = result.current;
   const firstTask = perform();
   // Must call mapError, else posterus throws
   firstTask.catch(e => {
