@@ -79,7 +79,7 @@ export function futureQueue(
     cancelAll: {
       value: () => {
         queue.splice(0, queue.length)
-        for (const active of activeList) {
+        for (const active of [...activeList]) {
           active.deinit();
         }
       }
