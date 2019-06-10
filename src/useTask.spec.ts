@@ -122,6 +122,12 @@ test('drop task - concurrency 1', async t => {
     'Second task was cancelled, not run'
   );
 
+  let called = false;
+  const fn = () => { called = true };
+  secondTask.cancel();
+  secondTask.then(fn);
+  t.true(called);
+
   t.is(
     result.current[0].isRunning,
     true,
