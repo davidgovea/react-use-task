@@ -98,3 +98,108 @@ test('task throws uncaught error', async t => {
   await t.throwsAsync(firstTask.toPromise());
   t.is(result.current[0].isRunning, false, 'not running after error');
 });
+
+test.only('drop task - concurrency 1', async t => {
+  const { result } = renderHook(() =>
+    useTask(
+      function*(): IterableIterator<any> {
+        yield new Promise(r => setTimeout(r, 1000));
+      },
+      [],
+      { mode: 'drop' }
+    )
+  );
+
+  const end = timeSpan();
+
+  const [, perform] = result.current;
+  const firstTask = perform();
+  const secondTask = perform();
+
+  await secondTask.toPromise();
+  t.true(
+    inRange(end(), { start: 0, end: 50 }),
+    'Second task was cancelled, not run'
+  );
+
+  t.is(
+    result.current[0].isRunning,
+    true,
+    'running after second task cancelled'
+  );
+
+  await firstTask.toPromise();
+  t.true(inRange(end(), { start: 900, end: 1200 }), 'First task ran');
+
+  t.is(result.current[0].isRunning, false, 'not running after first task ran');
+});
+
+test.only('restartable task - concurrency 1', async t => {
+  const { result } = renderHook(() =>
+    useTask(
+      function*(): IterableIterator<any> {
+        yield new Promise(r => setTimeout(r, 1000));
+      },
+      [],
+      { mode: 'restartable' }
+    )
+  );
+
+  const end = timeSpan();
+
+  const [, perform] = result.current;
+  const firstTask = perform();
+  const secondTask = perform();
+
+  await firstTask.toPromise();
+  t.true(
+    inRange(end(), { start: 0, end: 50 }),
+    'First task was cancelled, not run'
+  );
+
+  t.is(result.current[0].isRunning, true, 'running after first task cancelled');
+
+  await secondTask.toPromise();
+  t.true(inRange(end(), { start: 900, end: 1200 }), 'First task ran');
+
+  t.is(result.current[0].isRunning, false, 'not running after second task ran');
+});
+
+test.only('keepLatest task - concurrency 1', async t => {
+  const { result } = renderHook(() =>
+    useTask(
+      function*(): IterableIterator<any> {
+        yield new Promise(r => setTimeout(r, 1000));
+      },
+      [],
+      { mode: 'keepLatest' }
+    )
+  );
+
+  const end = timeSpan();
+
+  const [, perform] = result.current;
+  const firstTask = perform();
+  const secondTask = perform().catch(() => undefined);
+  const thirdTask = perform();
+
+  await secondTask;
+  t.true(
+    inRange(end(), { start: 0, end: 50 }),
+    'Second task was cancelled, not run'
+  );
+
+  t.is(
+    result.current[0].isRunning,
+    true,
+    'running after second task cancelled'
+  );
+
+  await firstTask.toPromise();
+  t.true(inRange(end(), { start: 900, end: 1200 }), 'First task ran');
+
+  await thirdTask.toPromise();
+  t.true(inRange(end(), { start: 1800, end: 2200 }), 'Second task ran');
+
+  t.is(result.current[0].isRunning, false, 'not running after second task ran');
+});
