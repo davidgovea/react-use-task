@@ -99,7 +99,7 @@ test('task throws uncaught error', async t => {
   t.is(result.current[0].isRunning, false, 'not running after error');
 });
 
-test.only('drop task - concurrency 1', async t => {
+test('drop task - concurrency 1', async t => {
   const { result } = renderHook(() =>
     useTask(
       function*(): IterableIterator<any> {
@@ -134,7 +134,7 @@ test.only('drop task - concurrency 1', async t => {
   t.is(result.current[0].isRunning, false, 'not running after first task ran');
 });
 
-test.only('restartable task - concurrency 1', async t => {
+test('restartable task - concurrency 1', async t => {
   const { result } = renderHook(() =>
     useTask(
       function*(): IterableIterator<any> {
@@ -165,7 +165,7 @@ test.only('restartable task - concurrency 1', async t => {
   t.is(result.current[0].isRunning, false, 'not running after second task ran');
 });
 
-test.only('keepLatest task - concurrency 1', async t => {
+test('keepLatest task - concurrency 1', async t => {
   const { result } = renderHook(() =>
     useTask(
       function*(): IterableIterator<any> {
