@@ -58,7 +58,7 @@ test('basic task state', async t => {
   );
 });
 
-test.only('cancelling basic task', async t => {
+test('cancelling basic task', async t => {
   const { result } = renderHook(() =>
     useTask(function*(): IterableIterator<any> {
       yield new Promise(r => setTimeout(r, 1000));
@@ -78,4 +78,23 @@ test.only('cancelling basic task', async t => {
   await firstTask.toPromise();
   t.true(inRange(end(), { start: 0, end: 50 }), 'Task was cancelled, not run');
   t.is(result.current[0].lastSuccessful, undefined, 'no successful task set');
+});
+
+test('task throws uncaught error', async t => {
+  const error = new Error('e');
+  const { result } = renderHook(() =>
+    useTask(function*(): IterableIterator<any> {
+      throw error;
+    }, [])
+  );
+
+  const [, perform, cancelAll] = result.current;
+  const firstTask = perform()
+  // Must call mapError, else posterus throws
+  firstTask.catch((e) => {
+    t.is(e, error);
+    return undefined;
+  });
+  await t.throwsAsync(firstTask.toPromise());
+  t.is(result.current[0].isRunning, false, 'not running after error');
 });
