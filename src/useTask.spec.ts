@@ -152,7 +152,9 @@ test('drop task - concurrency 1', async t => {
   );
 
   let called = false;
-  const fn = () => { called = true };
+  const fn = () => {
+    called = true;
+  };
   secondTask.cancel();
   secondTask.then(fn);
   t.true(called);
