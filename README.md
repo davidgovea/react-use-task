@@ -2,6 +2,11 @@
 
 ☎️ React hook for managing async tasks/coroutines (with cancellation)
 
+[![NPM](https://img.shields.io/npm/v/react-use-task.svg)](https://www.npmjs.com/package/react-use-task)
+[![Build Status](https://img.shields.io/circleci/project/github/davidgovea/react-use-task.svg)](https://circleci.com/gh/davidgovea/react-use-task)
+[![](https://img.shields.io/codecov/c/github/davidgovea/react-use-task.svg)](https://codecov.io/gh/davidgovea/react-use-task)
+[![Bundle Size](https://img.shields.io/bundlephobia/minzip/react-use-task.svg)](https://bundlephobia.com/result?p=react-use-task@latest)
+
 ## Why ?
 
 True cancellation requires generator functions. This library was inspired by [ember-concurrency](https://github.com/machty/ember-concurrency) and uses [posterus](https://github.com/mitranim/posterus#fiber) to run generators as coroutines.
