@@ -47,42 +47,11 @@ export function useTask<Result = any, Args extends any[] = any[]>(
   useEffect(() => cancelAll, []);
 
   const runTask = useCallback((...args: Args): Future<Result | undefined> => {
-    // tslint:disable-next-line no-let
-    let taskInstance: TaskInstance<Result>;
-    // const future = fiber<Result>(taskFn(...args));
-    const future = fiber<Result>(taskFn(...args)).map<Result>(
-      (error, value) => {
-        if (error) {
-          const isDeinit = isDeinitError(error);
-          if (last.current === taskInstance) {
-            const errorTask = {
-              ...taskInstance,
-              isError: !isDeinitError(error),
-              error
-            };
-            setLast(errorTask);
-          }
-          return isDeinit
-            ? Future.fromResult(undefined)
-            : Future.fromError(error);
-        } else {
-          const updatedTask = {
-            ...taskInstance,
-            value,
-            isSuccessful: true
-          };
-          if (last.current === taskInstance) {
-            setLast(updatedTask);
-          }
-          setLastSuccessful(updatedTask);
-          return Future.fromResult(value);
-        }
-      }
-    );
-
-    taskInstance = createTaskInstance(future);
-    setLast(taskInstance);
-    return future;
+    try {
+      return fiber<Result>(taskFn(...args));
+    } catch (error) {
+      return Future.fromError(error);
+    }
   }, deps);
 
   const perform = useCallback((...args: Args) => {
@@ -106,10 +75,30 @@ export function useTask<Result = any, Args extends any[] = any[]>(
         queue.current.empty();
       }
     }
-    const future = queue
+    const future: Future<Result> = queue
       .current(() => runTask(...args))
+      .mapResult((value: Result) => {
+        const updatedTask = {
+          ...taskInstance,
+          value,
+          isSuccessful: true
+        };
+        if (last.current === taskInstance) {
+          setLast(updatedTask);
+        }
+        setLastSuccessful(updatedTask);
+        return value;
+      })
       .mapError(error => {
         const isDeinit = isDeinitError(error);
+        if (last.current === taskInstance) {
+          const errorTask = {
+            ...taskInstance,
+            isError: !isDeinitError(error),
+            error
+          };
+          setLast(errorTask);
+        }
         return isDeinit
           ? Future.fromResult(undefined)
           : Future.fromError(error);
@@ -117,7 +106,9 @@ export function useTask<Result = any, Args extends any[] = any[]>(
       .finally(() => {
         setIsRunning(queue.current.activeCount !== 0);
       });
-    return createTaskInstance(future);
+    const taskInstance = createTaskInstance(future);
+    setLast(taskInstance);
+    return taskInstance;
   }, deps);
 
   return [
