@@ -23,6 +23,9 @@ declare namespace Posterus {
     fromPromise: <U>(promise: Promise<U>) => Future<U>;
     all: (values: any[]) => Future<any>;
     race: (values: any[]) => Future<any>;
+    scheduler: {
+      tick: () => void;
+    };
   }
 }
 
