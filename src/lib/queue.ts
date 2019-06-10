@@ -59,7 +59,6 @@ export function futureQueue(
     if (activeCount < concurrency || concurrency <= 0) {
       run(fn, settle, ...args);
     } else {
-      console.log('add to queue');
       queue.push(run.bind(null, fn, settle, ...args));
     }
   };
