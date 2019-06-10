@@ -126,16 +126,18 @@ export function useTask<Result = any, Args extends any[] = any[]>(
 
 export default useTask;
 
+const noop = () => undefined;
+const noopCb = (cb: (...args: any[]) => any) => cb();
 const initialTaskInstance: TaskInstance<any> = {
   isSuccessful: false,
   isError: false,
-  deref: () => undefined,
+  deref: noop,
   toPromise: () => Promise.resolve(undefined),
-  cancel: () => undefined,
-  mapError: () => undefined,
-  mapResult: (cb: any) => cb(),
-  catch: () => undefined,
-  then: (cb: any) => cb()
+  cancel: noop,
+  mapError: noop,
+  mapResult: noopCb,
+  catch: noop,
+  then: noopCb
 };
 
 function createTaskInstance<T>(future: Future<T>): TaskInstance<T> {
