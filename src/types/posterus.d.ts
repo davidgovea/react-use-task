@@ -39,5 +39,7 @@ declare module 'posterus' {
 declare module 'posterus/fiber' {
   // Keep an eye on https://github.com/Microsoft/TypeScript/pull/30790
   //  would like to remove the <any> and infer from iterator's explicit return type
-  export const fiber: <T>(iterator: IterableIterator<any>) => Posterus.Future<T>;
+  export const fiber: <T>(
+    iterator: IterableIterator<any>
+  ) => Posterus.Future<T>;
 }

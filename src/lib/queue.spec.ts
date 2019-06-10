@@ -146,7 +146,6 @@ test('empty method', async t => {
   limit.empty();
   t.is(limit.activeCount, 3);
   t.is(limit.pendingCount, 0);
-
 });
 
 test('cancellAll method', async t => {

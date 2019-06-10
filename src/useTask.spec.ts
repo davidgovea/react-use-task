@@ -89,9 +89,9 @@ test('task throws uncaught error', async t => {
   );
 
   const [, perform, cancelAll] = result.current;
-  const firstTask = perform()
+  const firstTask = perform();
   // Must call mapError, else posterus throws
-  firstTask.catch((e) => {
+  firstTask.catch(e => {
     t.is(e, error);
     return undefined;
   });

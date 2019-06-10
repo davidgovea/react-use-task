@@ -8,8 +8,8 @@ test('test', async t => {
     initialProps: {
       *task(): any {
         yield 5;
-      },
-    },
+      }
+    }
   });
 
   const [initialState] = hook.result.current;

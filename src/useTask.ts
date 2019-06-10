@@ -62,11 +62,9 @@ export function useTask<Result = any, Args extends any[] = any[]>(
     if (mode === 'drop' && isSaturated) {
       const instance = { ...initialTaskInstance };
       setLast(instance);
-      console.log('dropped');
       return instance;
     }
     if (mode === 'restartable' && isSaturated) {
-      console.log('cancelling oldest running task');
       queue.current.oldestRunning.deinit();
     }
     if (mode === 'keepLatest' && isSaturated) {

@@ -78,7 +78,7 @@ export function futureQueue(
     },
     cancelAll: {
       value: () => {
-        queue.splice(0, queue.length)
+        queue.splice(0, queue.length);
         for (const active of [...activeList]) {
           active.deinit();
         }
@@ -91,7 +91,7 @@ export function futureQueue(
     },
     oldestRunning: {
       get: () => activeList[0]
-    },
+    }
   });
 
   return generator as any;
