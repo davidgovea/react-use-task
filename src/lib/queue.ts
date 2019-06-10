@@ -23,8 +23,7 @@ export function futureQueue(
 ): AnyFn<Future> & {
   activeCount: number;
   pendingCount: number;
-  activeList: Future[];
-  queue: Array<() => Future>;
+  oldestRunning: Future;
   empty: () => void;
   cancelAll: () => void;
 } {
@@ -86,18 +85,13 @@ export function futureQueue(
       }
     },
     empty: {
-      value: () => queue.splice(0, queue.length)
-    },
-    queue: {
-      get: () => {
-        return [...queue];
+      value: () => {
+        queue.splice(0, queue.length);
       }
     },
-    activeList: {
-      get: () => {
-        return [...activeList];
-      }
-    }
+    oldestRunning: {
+      get: () => activeList[0]
+    },
   });
 
   return generator as any;

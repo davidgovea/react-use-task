@@ -98,11 +98,10 @@ export function useTask<Result = any, Args extends any[] = any[]>(
     }
     if (mode === 'restartable' && isSaturated) {
       console.log('cancelling oldest running task');
-      queue.current.activeList[0].deinit();
+      queue.current.oldestRunning.deinit();
     }
     if (mode === 'keepLatest' && isSaturated) {
       if (queue.current.pendingCount > 0) {
-        console.log('dropped pending task', queue.current.queue);
         last.current.cancel();
         queue.current.empty();
       }
