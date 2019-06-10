@@ -11,7 +11,7 @@ test('basic task state', async t => {
     useTask(function*(): IterableIterator<any> {
       yield new Promise(r => setTimeout(r, 1000));
       return 'foo';
-    }, [])
+    })
   );
 
   const [initialState, perform] = result.current;
@@ -80,6 +80,19 @@ test('cancelling basic task', async t => {
   t.is(result.current[0].lastSuccessful, undefined, 'no successful task set');
 });
 
+test('promise conversion of task instance with `.then()`', async t => {
+  const { result } = renderHook(() =>
+    useTask(function*(): IterableIterator<any> {
+      yield 9001;
+      return 42;
+    }, [])
+  );
+
+  const [, perform] = result.current;
+  const val = await perform().then((r: any) => Promise.resolve(r));
+  t.is(val, 42);
+});
+
 test('task throws uncaught error', async t => {
   const error = new Error('e');
   const { result } = renderHook(() =>
@@ -97,6 +110,22 @@ test('task throws uncaught error', async t => {
   });
   await t.throwsAsync(firstTask.toPromise());
   t.is(result.current[0].isRunning, false, 'not running after error');
+});
+
+test('invalid task fn', async t => {
+  const { result } = renderHook(() => useTask((a: any) => a.foo.bar));
+
+  const [, perform] = result.current;
+  const firstTask = perform(undefined as any);
+  // Must call mapError, else posterus throws
+  let isError = false;
+  firstTask.catch(() => {
+    isError = true;
+    return undefined;
+  });
+  await t.throwsAsync(firstTask.toPromise());
+  t.is(result.current[0].isRunning, false, 'not running after error');
+  t.true(isError);
 });
 
 test('drop task - concurrency 1', async t => {
