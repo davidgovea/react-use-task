@@ -140,15 +140,23 @@ const initialTaskInstance: TaskInstance<any> = {
   isError: false,
   deref: () => undefined,
   toPromise: () => Promise.resolve(undefined),
-  cancel: () => undefined
+  cancel: () => undefined,
+  mapError: (cb: any) => undefined,
+  mapResult: (cb: any) => cb(),
+  catch: (cb: any) => undefined,
+  then: (cb: any) => cb()
 };
 
 function createTaskInstance<T>(future: Future<T>): TaskInstance<T> {
   return {
     ...initialTaskInstance,
-    deref: () => future.deref(),
     toPromise: () => future.weak().toPromise(),
-    cancel: () => future.deinit()
+    deref: future.deref.bind(future),
+    cancel: future.deinit.bind(future),
+    mapResult: future.mapResult.bind(future),
+    mapError: future.mapError.bind(future),
+    catch: cb => future.mapError<T>(cb).toPromise(),
+    then: cb => future.mapResult<T>(cb).toPromise()
   };
 }
 
@@ -164,6 +172,10 @@ type TaskInstance<T> = TaskInstanceData<T> & {
   toPromise: () => Promise<T>;
   cancel: () => void;
   deref: () => T | undefined;
+  mapError: Future['mapError'];
+  mapResult: Future['mapResult'];
+  catch: (cb: any) => Promise<T>;
+  then: (cb: any) => Promise<T>;
 };
 
 export interface TaskState<T> {
