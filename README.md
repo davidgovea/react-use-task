@@ -1,5 +1,7 @@
 # react-use-task
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/davidgovea/react-use-task.svg)](https://greenkeeper.io/)
+
 ☎️ React hook for managing async tasks/coroutines (with cancellation)
 
 ## Why ?
