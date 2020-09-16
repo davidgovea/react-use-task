@@ -1,3 +1,6 @@
+# Deprecated: you probably don't want this.
+Simply put: Components are not the right place to define these tasks. Currently working towards bringing `ember-concurrency`-like modifiers and derived state to `redux-saga`. This was a fun exercise.
+
 # react-use-task
 
 ☎️ React hooks for writing async tasks/workers (with cancellation and concurrency)
